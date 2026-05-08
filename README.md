@@ -42,12 +42,14 @@ The first project skeleton is in place:
 - `tournament_sim/agents.py` defines the basic agent interface and benchmark `EquilibriumAgent`.
 - `tournament_sim/experiment.py` simulates subjects, treatments, and random matching.
 - `tournament_sim/round.py` simulates one complete two-player round.
+- `tournament_sim/summary.py` computes summary tables from simulated records.
 - `scripts/run_example.py` prints treatment cutoffs and one example round.
 - `tests/test_probabilities.py` checks the first probability helpers.
 - `tests/test_round.py` checks the first round-simulation rules.
 - `tests/test_treatments.py` checks the default treatment definitions.
 - `tests/test_experiment.py` checks experiment-level matching and records.
 - `tests/test_behavioral_agents.py` checks the additional behavioral agent types.
+- `tests/test_summary.py` checks summary statistics.
 
 Once Python is available, run the small checks with:
 
@@ -58,6 +60,7 @@ python tests/test_equilibrium_agent.py
 python tests/test_treatments.py
 python tests/test_experiment.py
 python tests/test_behavioral_agents.py
+python tests/test_summary.py
 python scripts/run_example.py
 ```
 

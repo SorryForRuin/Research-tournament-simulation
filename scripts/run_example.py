@@ -22,6 +22,10 @@ from tournament_sim.probabilities import (
     theoretical_reveal_cutoff,
 )
 from tournament_sim.round import simulate_round
+from tournament_sim.summary import (
+    summarize_by_treatment_and_type,
+    treatment_comparison_summary,
+)
 from tournament_sim.treatment import default_treatments
 
 
@@ -137,6 +141,42 @@ def main():
     print("matches=", len(experiment.match_records))
     print("player_records=", len(experiment.player_records))
     print("first_player_record=", experiment.player_records[0])
+
+    print()
+    print("Treatment summary")
+    print("-----------------")
+    for row in treatment_comparison_summary(experiment.player_records):
+        print(
+            row["treatment_id"],
+            "reveal_rate=",
+            round(row["reveal_rate"], 3),
+            "improvement_rate=",
+            round(row["improvement_rate"], 3),
+            "avg_payoff=",
+            round(row["average_payoff"], 2),
+        )
+
+    print()
+    print("Treatment x player type summary")
+    print("-------------------------------")
+    summary_rows = summarize_by_treatment_and_type(experiment.player_records)
+    for row in summary_rows[:8]:
+        empirical_cutoff = row["empirical_reveal_cutoff"]
+        if empirical_cutoff is not None:
+            empirical_cutoff = round(empirical_cutoff, 1)
+
+        print(
+            row["treatment_id"],
+            row["player_type"],
+            "n=",
+            row["n_player_records"],
+            "reveal_rate=",
+            round(row["reveal_rate"], 3),
+            "avg_payoff=",
+            round(row["average_payoff"], 2),
+            "emp_cutoff=",
+            empirical_cutoff,
+        )
 
 
 if __name__ == "__main__":

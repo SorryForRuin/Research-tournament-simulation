@@ -8,6 +8,7 @@ from tournament_sim.agents import (
     UnderRevealerAgent,
 )
 from tournament_sim.experiment import simulate_experiment
+from tournament_sim.summary import summarize_by_treatment_and_type
 from tournament_sim.treatment import Treatment, default_treatments
 from tournament_sim.round import simulate_round
 
@@ -21,4 +22,5 @@ __all__ = [
     "default_treatments",
     "simulate_experiment",
     "simulate_round",
+    "summarize_by_treatment_and_type",
 ]
