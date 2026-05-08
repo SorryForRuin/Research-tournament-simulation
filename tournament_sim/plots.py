@@ -63,26 +63,38 @@ def plot_reveal_probability_by_quality_bin(player_records, output_dir, bin_size=
     return _save(fig, output_dir, "reveal_probability_by_quality_bin.png")
 
 
-def plot_improvement_after_revealed_quality(player_records, output_dir, bin_size=10):
+def plot_improvement_after_revealed_quality(player_records, output_dir, bin_size=10, min_bin_n=20):
     """Plot improvement probability after observing a revealed opponent."""
     rows = _improvement_rate_by_treatment_and_opponent_bin(player_records, bin_size)
+    rows = [row for row in rows if row["n_player_records"] >= min_bin_n]
     treatments = _unique(row["treatment_id"] for row in rows)
 
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    for treatment in treatments:
-        treatment_rows = [row for row in rows if row["treatment_id"] == treatment]
-        treatment_rows = _sort_by_bin_midpoint(treatment_rows, "opponent_quality_bin")
-        x_values = [_bin_midpoint(row["opponent_quality_bin"]) for row in treatment_rows]
-        y_values = [row["improvement_rate"] for row in treatment_rows]
-        ax.plot(x_values, y_values, marker="o", linewidth=2, label=treatment)
+    if rows:
+        for treatment in treatments:
+            treatment_rows = [row for row in rows if row["treatment_id"] == treatment]
+            treatment_rows = _sort_by_bin_midpoint(treatment_rows, "opponent_quality_bin")
+            x_values = [_bin_midpoint(row["opponent_quality_bin"]) for row in treatment_rows]
+            y_values = [row["improvement_rate"] for row in treatment_rows]
+            ax.plot(x_values, y_values, marker="o", linewidth=2, label=treatment)
+    else:
+        ax.text(
+            0.5,
+            0.5,
+            "No revealed-opponent bins with enough observations",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+        )
 
     ax.set_title("Improvement After Observing Revealed Opponent Quality")
     ax.set_xlabel("Opponent revealed quality bin midpoint")
     ax.set_ylabel("Improvement probability")
     ax.set_ylim(-0.03, 1.03)
     ax.grid(True, alpha=0.25)
-    ax.legend(frameon=False)
+    if rows:
+        ax.legend(frameon=False)
 
     return _save(fig, output_dir, "improvement_after_revealed_quality.png")
 
