@@ -28,7 +28,7 @@ def test_export_experiment_outputs_writes_csv_files():
     output_dir = PROJECT_ROOT / "outputs" / "test_exports"
     paths = export_experiment_outputs(result, output_dir)
 
-    assert len(paths) == 6
+    assert len(paths) == 7
     for path in paths:
         assert path.exists()
         assert path.suffix == ".csv"

@@ -4,6 +4,7 @@ import csv
 from pathlib import Path
 
 from tournament_sim.summary import (
+    cutoff_comparison_summary,
     improvement_rate_by_revealed_opponent_quality,
     reveal_rate_by_quality_bin,
     summarize_by_treatment_and_type,
@@ -49,6 +50,12 @@ def export_experiment_outputs(experiment_result, output_dir):
         export_rows_csv(
             summarize_by_treatment_and_type(player_records),
             summary_dir / "treatment_by_player_type_summary.csv",
+        )
+    )
+    paths.append(
+        export_rows_csv(
+            cutoff_comparison_summary(player_records),
+            summary_dir / "cutoff_comparison_by_player_type.csv",
         )
     )
     paths.append(

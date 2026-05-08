@@ -10,7 +10,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from tournament_sim.experiment import simulate_experiment  # noqa: E402
 from tournament_sim.export import export_experiment_outputs  # noqa: E402
 from tournament_sim.plots import generate_all_plots  # noqa: E402
-from tournament_sim.summary import treatment_comparison_summary  # noqa: E402
+from tournament_sim.summary import (  # noqa: E402
+    cutoff_comparison_summary,
+    treatment_comparison_summary,
+)
 
 
 POPULATION_COMPOSITION = {
@@ -50,6 +53,29 @@ def main():
             round(row["improvement_rate"], 3),
             "avg_payoff=",
             round(row["average_payoff"], 2),
+        )
+
+    print()
+    print("Model vs simulated cutoff comparison:")
+    for row in cutoff_comparison_summary(experiment.player_records):
+        empirical = row["simulated_empirical_cutoff"]
+        difference = row["cutoff_difference_empirical_minus_model"]
+        if empirical is None:
+            empirical_text = "None"
+            difference_text = "None"
+        else:
+            empirical_text = str(round(empirical, 2))
+            difference_text = str(round(difference, 2))
+
+        print(
+            row["treatment_id"],
+            row["player_type"],
+            "model=",
+            round(row["model_reveal_cutoff"], 2),
+            "simulated=",
+            empirical_text,
+            "difference=",
+            difference_text,
         )
 
     print()

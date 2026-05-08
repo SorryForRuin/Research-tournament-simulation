@@ -124,6 +124,38 @@ def treatment_comparison_summary(player_records):
     return _sort_rows(rows, ["treatment_id"])
 
 
+def cutoff_comparison_summary(player_records):
+    """Compare model reveal cutoff to simulated empirical cutoff by player type."""
+    rows = []
+
+    for key, records in _group_records(player_records, ["treatment_id", "player_type"]).items():
+        treatment_id, player_type = key
+        theoretical_cutoff = 100 * theoretical_reveal_cutoff(records[0]["k"])
+        empirical_cutoff = estimate_empirical_reveal_cutoff(records)
+
+        cutoff_difference = None
+        if empirical_cutoff is not None:
+            cutoff_difference = empirical_cutoff - theoretical_cutoff
+
+        rows.append(
+            {
+                "treatment_id": treatment_id,
+                "player_type": player_type,
+                "V": records[0]["V"],
+                "c": records[0]["c"],
+                "h": records[0]["h"],
+                "k": records[0]["k"],
+                "model_reveal_cutoff": theoretical_cutoff,
+                "simulated_empirical_cutoff": empirical_cutoff,
+                "cutoff_difference_empirical_minus_model": cutoff_difference,
+                "reveal_rate": _mean_bool(records, "reveal_decision"),
+                "n_player_records": len(records),
+            }
+        )
+
+    return _sort_rows(rows, ["treatment_id", "player_type"])
+
+
 def estimate_empirical_reveal_cutoff(player_records, bin_size=5):
     """
     Estimate the first quality-bin midpoint where reveal rate is at least 50%.

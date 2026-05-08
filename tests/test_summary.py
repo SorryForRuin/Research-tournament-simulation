@@ -13,6 +13,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from tournament_sim.experiment import simulate_experiment  # noqa: E402
 from tournament_sim.summary import (  # noqa: E402
+    cutoff_comparison_summary,
     deterrence_rate,
     estimate_empirical_reveal_cutoff,
     improvement_rate_by_revealed_opponent_quality,
@@ -136,6 +137,21 @@ def test_summary_with_simulated_experiment():
     assert len(type_rows) == 4
 
 
+def test_cutoff_comparison_summary():
+    records = [
+        _record(10, False, False),
+        _record(80, True, None),
+        _record(90, True, None),
+    ]
+
+    rows = cutoff_comparison_summary(records)
+    row = rows[0]
+
+    assert round(row["model_reveal_cutoff"], 4) == 85.7143
+    assert row["simulated_empirical_cutoff"] == 82.0
+    assert row["cutoff_difference_empirical_minus_model"] is not None
+
+
 if __name__ == "__main__":
     test_quality_bin_label()
     test_basic_summary_rates()
@@ -144,4 +160,5 @@ if __name__ == "__main__":
     test_improvement_rate_after_revealed_opponent_quality()
     test_deterrence_rate()
     test_summary_with_simulated_experiment()
+    test_cutoff_comparison_summary()
     print("All summary tests passed.")

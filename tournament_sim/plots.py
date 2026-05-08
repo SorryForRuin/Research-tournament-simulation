@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 from tournament_sim.probabilities import theoretical_reveal_cutoff
 from tournament_sim.summary import (
+    cutoff_comparison_summary,
     estimate_empirical_reveal_cutoff,
     quality_bin_label,
 )
@@ -60,7 +61,7 @@ def plot_reveal_probability_by_quality_bin(player_records, output_dir, bin_size=
     ax.grid(True, alpha=0.25)
     ax.legend(frameon=False)
 
-    return _save(fig, output_dir, "reveal_probability_by_quality_bin.png")
+    return _save(fig, output_dir, "reveal_probability_by_quality_bin_treatment.png")
 
 
 def plot_improvement_after_revealed_quality(player_records, output_dir, bin_size=10, min_bin_n=20):
@@ -96,7 +97,7 @@ def plot_improvement_after_revealed_quality(player_records, output_dir, bin_size
     if rows:
         ax.legend(frameon=False)
 
-    return _save(fig, output_dir, "improvement_after_revealed_quality.png")
+    return _save(fig, output_dir, "improvement_probability_by_revealed_quality_filtered.png")
 
 
 def plot_reveal_region(output_dir):
@@ -146,45 +147,57 @@ def plot_payoff_distribution(player_records, output_dir):
 
 
 def plot_theoretical_vs_empirical_cutoff(player_records, output_dir):
-    """Compare model cutoff to simulated EquilibriumAgent cutoff by treatment."""
-    rows = _equilibrium_cutoff_rows(player_records)
-    rows = [row for row in rows if row["empirical_cutoff"] is not None]
+    """Compare model cutoff to empirical simulated cutoff by treatment and type."""
+    rows = cutoff_comparison_summary(player_records)
+    rows = [row for row in rows if row["simulated_empirical_cutoff"] is not None]
+    treatments = _unique(row["treatment_id"] for row in rows)
 
-    labels = [row["treatment_id"] for row in rows]
-    theoretical = [row["theoretical_cutoff"] for row in rows]
-    empirical = [row["empirical_cutoff"] for row in rows]
-    x_values = list(range(len(rows)))
-    width = 0.38
-
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, axes = plt.subplots(2, 2, figsize=(14, 9), sharey=True)
+    axes = [axis for axis_row in axes for axis in axis_row]
 
     if not rows:
-        ax.text(
+        axes[0].text(
             0.5,
             0.5,
-            "No empirical EquilibriumAgent cutoff available",
+            "No empirical cutoffs available",
             ha="center",
             va="center",
-            transform=ax.transAxes,
+            transform=axes[0].transAxes,
         )
-        ax.set_axis_off()
-        return _save(fig, output_dir, "theoretical_vs_empirical_cutoff.png")
-    left = [x - width / 2 for x in x_values]
-    right = [x + width / 2 for x in x_values]
+        axes[0].set_axis_off()
+        for axis in axes[1:]:
+            axis.set_visible(False)
+        return _save(fig, output_dir, "cutoff_comparison_by_player_type.png")
 
-    ax.bar(left, theoretical, width=width, color=PLOT_COLORS["gray"], label="Model cutoff r*")
-    ax.bar(right, empirical, width=width, color=PLOT_COLORS["gold"], label="Simulated EquilibriumAgent cutoff")
+    for index, treatment in enumerate(treatments):
+        axis = axes[index]
+        treatment_rows = [row for row in rows if row["treatment_id"] == treatment]
+        labels = [row["player_type"] for row in treatment_rows]
+        model = [row["model_reveal_cutoff"] for row in treatment_rows]
+        empirical = [row["simulated_empirical_cutoff"] for row in treatment_rows]
+        x_values = list(range(len(treatment_rows)))
+        width = 0.38
+        left = [x - width / 2 for x in x_values]
+        right = [x + width / 2 for x in x_values]
 
-    ax.set_title("Model vs Simulated Equilibrium Reveal Cutoff")
-    ax.set_xlabel("Treatment")
-    ax.set_ylabel("Quality cutoff on 0-100 grid")
-    ax.set_ylim(0, 105)
-    ax.set_xticks(x_values)
-    ax.set_xticklabels(labels, rotation=20, ha="right")
-    ax.grid(True, axis="y", alpha=0.25)
-    ax.legend(frameon=False)
+        axis.bar(left, model, width=width, color=PLOT_COLORS["gray"], label="Model r*")
+        axis.bar(right, empirical, width=width, color=PLOT_COLORS["gold"], label="Simulated")
 
-    return _save(fig, output_dir, "theoretical_vs_empirical_cutoff.png")
+        axis.set_title(treatment)
+        axis.set_ylim(0, 105)
+        axis.set_xticks(x_values)
+        axis.set_xticklabels(labels, rotation=35, ha="right")
+        axis.grid(True, axis="y", alpha=0.25)
+
+    for axis in axes[len(treatments) :]:
+        axis.set_visible(False)
+
+    axes[0].set_ylabel("Quality cutoff on 0-100 grid")
+    axes[2].set_ylabel("Quality cutoff on 0-100 grid")
+    axes[0].legend(frameon=False)
+    fig.suptitle("Model vs Simulated Reveal Cutoff by Player Type")
+
+    return _save(fig, output_dir, "cutoff_comparison_by_player_type.png")
 
 
 def _save(fig, output_dir, filename):
