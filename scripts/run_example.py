@@ -13,6 +13,7 @@ from tournament_sim.agents import (
     AlwaysRevealAgent,
     EquilibriumAgent,
 )
+from tournament_sim.experiment import simulate_experiment
 from tournament_sim.probabilities import (
     theoretical_hidden_cutoff,
     theoretical_reveal_cutoff,
@@ -95,6 +96,23 @@ def main():
             "reveals=",
             [record["reveal_decision"] for record in result.player_records],
         )
+
+    print()
+    print("Small experiment simulation")
+    print("---------------------------")
+    experiment = simulate_experiment(
+        num_subjects=40,
+        num_rounds=5,
+        population_composition={
+            "EquilibriumAgent": 0.7,
+            "AlwaysRevealAgent": 0.3,
+        },
+        rng_seed=123,
+    )
+    print("subjects=", len(experiment.subjects))
+    print("matches=", len(experiment.match_records))
+    print("player_records=", len(experiment.player_records))
+    print("first_player_record=", experiment.player_records[0])
 
 
 if __name__ == "__main__":

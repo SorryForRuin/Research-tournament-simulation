@@ -40,11 +40,13 @@ The first project skeleton is in place:
 - `tournament_sim/treatment.py` defines treatment parameters.
 - `tournament_sim/probabilities.py` defines exact discrete probability helpers.
 - `tournament_sim/agents.py` defines the basic agent interface and benchmark `EquilibriumAgent`.
+- `tournament_sim/experiment.py` simulates subjects, treatments, and random matching.
 - `tournament_sim/round.py` simulates one complete two-player round.
 - `scripts/run_example.py` prints treatment cutoffs and one example round.
 - `tests/test_probabilities.py` checks the first probability helpers.
 - `tests/test_round.py` checks the first round-simulation rules.
 - `tests/test_treatments.py` checks the default treatment definitions.
+- `tests/test_experiment.py` checks experiment-level matching and records.
 
 Once Python is available, run the small checks with:
 
@@ -53,6 +55,7 @@ python tests/test_probabilities.py
 python tests/test_round.py
 python tests/test_equilibrium_agent.py
 python tests/test_treatments.py
+python tests/test_experiment.py
 python scripts/run_example.py
 ```
 
@@ -68,3 +71,18 @@ The current one-round simulator handles:
 - random tie-breaking,
 - winner-contingent hype for revealed winners only,
 - improvement costs paid whether the player wins or loses.
+
+## Experiment Simulator Notes
+
+The current experiment simulator uses between-subjects treatment assignment:
+subjects are split as evenly as possible across the four default treatments, and
+random matching happens within each treatment group each round.
+
+The population composition is configurable. For example:
+
+```python
+population_composition = {
+    "EquilibriumAgent": 0.7,
+    "AlwaysRevealAgent": 0.3,
+}
+```
