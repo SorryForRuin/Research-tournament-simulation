@@ -43,6 +43,7 @@ The first project skeleton is in place:
 - `tournament_sim/experiment.py` simulates subjects, treatments, and random matching.
 - `tournament_sim/round.py` simulates one complete two-player round.
 - `tournament_sim/summary.py` computes summary tables from simulated records.
+- `tournament_sim/plots.py` generates presentation plots from simulated records.
 - `scripts/run_example.py` prints treatment cutoffs and one example round.
 - `tests/test_probabilities.py` checks the first probability helpers.
 - `tests/test_round.py` checks the first round-simulation rules.
@@ -50,6 +51,7 @@ The first project skeleton is in place:
 - `tests/test_experiment.py` checks experiment-level matching and records.
 - `tests/test_behavioral_agents.py` checks the additional behavioral agent types.
 - `tests/test_summary.py` checks summary statistics.
+- `tests/test_plots.py` checks plot generation.
 
 Once Python is available, run the small checks with:
 
@@ -61,7 +63,9 @@ python tests/test_treatments.py
 python tests/test_experiment.py
 python tests/test_behavioral_agents.py
 python tests/test_summary.py
+python tests/test_plots.py
 python scripts/run_example.py
+python scripts/generate_small_plots.py
 ```
 
 ## Round Simulator Notes
