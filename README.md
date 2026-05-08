@@ -40,13 +40,28 @@ The first project skeleton is in place:
 - `tournament_sim/treatment.py` defines treatment parameters.
 - `tournament_sim/probabilities.py` defines exact discrete probability helpers.
 - `tournament_sim/agents.py` defines the basic agent interface.
-- `tournament_sim/round.py` defines a simple player state object.
-- `scripts/run_example.py` prints the default treatment cutoffs.
+- `tournament_sim/round.py` simulates one complete two-player round.
+- `scripts/run_example.py` prints treatment cutoffs and one example round.
 - `tests/test_probabilities.py` checks the first probability helpers.
+- `tests/test_round.py` checks the first round-simulation rules.
 
 Once Python is available, run the small checks with:
 
 ```bash
 python tests/test_probabilities.py
+python tests/test_round.py
 python scripts/run_example.py
 ```
+
+## Round Simulator Notes
+
+The current one-round simulator handles:
+
+- simultaneous reveal/hide decisions,
+- reveal lock-in,
+- simultaneous improve/stop decisions when both players hide,
+- hidden-player best-response information when the opponent revealed,
+- improvement draws from the current quality up to 100,
+- random tie-breaking,
+- winner-contingent hype for revealed winners only,
+- improvement costs paid whether the player wins or loses.
