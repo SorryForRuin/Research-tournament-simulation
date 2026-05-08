@@ -16,11 +16,6 @@ From the project folder, install the plotting dependency:
 python -m pip install -r requirements.txt
 ```
 
-On this machine, Codex has been using the full Python path:
-
-```powershell
-& 'C:\Users\KOK\AppData\Local\Programs\Python\Python313\python.exe' script_name.py
-```
 
 If plain `python` works in your terminal, you can use the shorter commands below.
 
