@@ -22,9 +22,11 @@ from tournament_sim.treatment import default_treatments
 
 
 def main():
+    treatments = default_treatments()
+
     print("Default treatment cutoffs")
     print("-------------------------")
-    for treatment in default_treatments():
+    for treatment in treatments:
         r_star = theoretical_reveal_cutoff(treatment.k)
         s_star = theoretical_hidden_cutoff(treatment.k)
         print(
@@ -40,7 +42,7 @@ def main():
     print()
     print("One example round")
     print("-----------------")
-    treatment = default_treatments()[2]
+    treatment = treatments[2]
     result = simulate_round(
         AlwaysRevealAgent(),
         AlwaysHideStopAgent(),
@@ -60,7 +62,7 @@ def main():
     print("EquilibriumAgent decisions")
     print("--------------------------")
     agent = EquilibriumAgent()
-    treatment = default_treatments()[0]
+    treatment = treatments[0]
     for q in [28, 29, 85, 86]:
         print(
             "q=",
@@ -69,6 +71,29 @@ def main():
             agent.decide_reveal(q, treatment),
             "improve_if_both_hide=",
             agent.decide_improve(q, treatment, False, None),
+        )
+
+    print()
+    print("One EquilibriumAgent round per treatment")
+    print("----------------------------------------")
+    for index, treatment in enumerate(treatments, start=1):
+        result = simulate_round(
+            EquilibriumAgent(),
+            EquilibriumAgent(),
+            treatment,
+            rng=random.Random(100 + index),
+            round_number=index,
+            subject_ids=(1, 2),
+            forced_qualities=(86, 70),
+        )
+        print(
+            treatment.treatment_id,
+            "winner=",
+            result.match_record["winner"],
+            "payoffs=",
+            [record["payoff"] for record in result.player_records],
+            "reveals=",
+            [record["reveal_decision"] for record in result.player_records],
         )
 
 

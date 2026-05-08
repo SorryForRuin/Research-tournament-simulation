@@ -44,6 +44,7 @@ The first project skeleton is in place:
 - `scripts/run_example.py` prints treatment cutoffs and one example round.
 - `tests/test_probabilities.py` checks the first probability helpers.
 - `tests/test_round.py` checks the first round-simulation rules.
+- `tests/test_treatments.py` checks the default treatment definitions.
 
 Once Python is available, run the small checks with:
 
@@ -51,6 +52,7 @@ Once Python is available, run the small checks with:
 python tests/test_probabilities.py
 python tests/test_round.py
 python tests/test_equilibrium_agent.py
+python tests/test_treatments.py
 python scripts/run_example.py
 ```
 
