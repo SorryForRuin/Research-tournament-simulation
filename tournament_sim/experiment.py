@@ -8,6 +8,10 @@ from tournament_sim.agents import (
     AlwaysHideStopAgent,
     AlwaysRevealAgent,
     EquilibriumAgent,
+    MyopicHeuristicAgent,
+    NoisyEquilibriumAgent,
+    OverRevealerAgent,
+    UnderRevealerAgent,
 )
 from tournament_sim.round import simulate_round
 from tournament_sim.treatment import default_treatments
@@ -15,6 +19,10 @@ from tournament_sim.treatment import default_treatments
 
 AGENT_TYPES = {
     "EquilibriumAgent": EquilibriumAgent,
+    "NoisyEquilibriumAgent": NoisyEquilibriumAgent,
+    "UnderRevealerAgent": UnderRevealerAgent,
+    "OverRevealerAgent": OverRevealerAgent,
+    "MyopicHeuristicAgent": MyopicHeuristicAgent,
     "AlwaysRevealAgent": AlwaysRevealAgent,
     "AlwaysHideStopAgent": AlwaysHideStopAgent,
     "AlwaysHideImproveAgent": AlwaysHideImproveAgent,

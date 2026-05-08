@@ -12,6 +12,9 @@ from tournament_sim.agents import (
     AlwaysHideStopAgent,
     AlwaysRevealAgent,
     EquilibriumAgent,
+    MyopicHeuristicAgent,
+    OverRevealerAgent,
+    UnderRevealerAgent,
 )
 from tournament_sim.experiment import simulate_experiment
 from tournament_sim.probabilities import (
@@ -75,6 +78,25 @@ def main():
         )
 
     print()
+    print("Behavioral agent reveal examples")
+    print("--------------------------------")
+    behavioral_agents = [
+        EquilibriumAgent(),
+        UnderRevealerAgent(),
+        OverRevealerAgent(),
+        MyopicHeuristicAgent(),
+    ]
+    for q in [75, 80, 86, 96]:
+        decisions = []
+        for behavioral_agent in behavioral_agents:
+            decisions.append(
+                behavioral_agent.agent_type
+                + "="
+                + str(behavioral_agent.decide_reveal(q, treatment))
+            )
+        print("q=", q, "; ".join(decisions))
+
+    print()
     print("One EquilibriumAgent round per treatment")
     print("----------------------------------------")
     for index, treatment in enumerate(treatments, start=1):
@@ -104,8 +126,10 @@ def main():
         num_subjects=40,
         num_rounds=5,
         population_composition={
-            "EquilibriumAgent": 0.7,
-            "AlwaysRevealAgent": 0.3,
+            "EquilibriumAgent": 0.4,
+            "UnderRevealerAgent": 0.2,
+            "OverRevealerAgent": 0.2,
+            "MyopicHeuristicAgent": 0.2,
         },
         rng_seed=123,
     )

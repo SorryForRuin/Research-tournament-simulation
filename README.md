@@ -47,6 +47,7 @@ The first project skeleton is in place:
 - `tests/test_round.py` checks the first round-simulation rules.
 - `tests/test_treatments.py` checks the default treatment definitions.
 - `tests/test_experiment.py` checks experiment-level matching and records.
+- `tests/test_behavioral_agents.py` checks the additional behavioral agent types.
 
 Once Python is available, run the small checks with:
 
@@ -56,6 +57,7 @@ python tests/test_round.py
 python tests/test_equilibrium_agent.py
 python tests/test_treatments.py
 python tests/test_experiment.py
+python tests/test_behavioral_agents.py
 python scripts/run_example.py
 ```
 
@@ -82,7 +84,10 @@ The population composition is configurable. For example:
 
 ```python
 population_composition = {
-    "EquilibriumAgent": 0.7,
-    "AlwaysRevealAgent": 0.3,
+    "EquilibriumAgent": 0.4,
+    "NoisyEquilibriumAgent": 0.2,
+    "UnderRevealerAgent": 0.15,
+    "OverRevealerAgent": 0.15,
+    "MyopicHeuristicAgent": 0.1,
 }
 ```

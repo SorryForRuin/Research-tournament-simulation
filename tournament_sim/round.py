@@ -55,11 +55,12 @@ def simulate_round(
     state1 = PlayerState(subject_ids[0], _agent_type(agent1), q1)
     state2 = PlayerState(subject_ids[1], _agent_type(agent2), q2)
 
-    state1.revealed = bool(agent1.decide_reveal(q1, treatment, info=None))
-    state2.revealed = bool(agent2.decide_reveal(q2, treatment, info=None))
+    info = {"rng": rng}
+    state1.revealed = bool(agent1.decide_reveal(q1, treatment, info=info))
+    state2.revealed = bool(agent2.decide_reveal(q2, treatment, info=info))
 
-    _decide_improvement(agent1, state1, state2, treatment)
-    _decide_improvement(agent2, state2, state1, treatment)
+    _decide_improvement(agent1, state1, state2, treatment, info)
+    _decide_improvement(agent2, state2, state1, treatment, info)
 
     _set_final_quality(state1, treatment, rng)
     _set_final_quality(state2, treatment, rng)
@@ -94,7 +95,7 @@ def _draw_initial_qualities(treatment, rng, forced_qualities):
     return q1, q2
 
 
-def _decide_improvement(agent, state, opponent_state, treatment):
+def _decide_improvement(agent, state, opponent_state, treatment, info):
     if state.revealed:
         state.improved = False
         return
@@ -110,7 +111,7 @@ def _decide_improvement(agent, state, opponent_state, treatment):
             treatment,
             observed_opponent_reveal=opponent_state.revealed,
             observed_quality_if_any=observed_quality,
-            info=None,
+            info=info,
         )
     )
 
