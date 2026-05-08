@@ -50,7 +50,14 @@ def reveal_rate_by_quality_bin(player_records, bin_size=10):
             }
         )
 
-    return _sort_rows(rows, ["treatment_id", "player_type", "quality_bin"])
+    return sorted(
+        rows,
+        key=lambda row: (
+            row["treatment_id"],
+            row["player_type"],
+            quality_bin_midpoint(row["quality_bin"]),
+        ),
+    )
 
 
 def improvement_rate_by_revealed_opponent_quality(player_records, bin_size=10):
@@ -85,7 +92,14 @@ def improvement_rate_by_revealed_opponent_quality(player_records, bin_size=10):
             }
         )
 
-    return _sort_rows(rows, ["treatment_id", "player_type", "opponent_quality_bin"])
+    return sorted(
+        rows,
+        key=lambda row: (
+            row["treatment_id"],
+            row["player_type"],
+            quality_bin_midpoint(row["opponent_quality_bin"]),
+        ),
+    )
 
 
 def treatment_comparison_summary(player_records):

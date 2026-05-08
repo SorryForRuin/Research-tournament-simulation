@@ -10,9 +10,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 from tournament_sim.probabilities import theoretical_reveal_cutoff
 from tournament_sim.summary import (
-    improvement_rate_by_revealed_opponent_quality,
-    reveal_rate_by_quality_bin,
-    summarize_by_treatment_and_type,
+    estimate_empirical_reveal_cutoff,
+    quality_bin_label,
 )
 
 
@@ -42,7 +41,7 @@ def generate_all_plots(player_records, output_dir):
 
 def plot_reveal_probability_by_quality_bin(player_records, output_dir, bin_size=10):
     """Plot reveal probability by initial quality bin for each treatment."""
-    rows = reveal_rate_by_quality_bin(player_records, bin_size=bin_size)
+    rows = _reveal_rate_by_treatment_and_bin(player_records, bin_size)
     treatments = _unique(row["treatment_id"] for row in rows)
 
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -66,7 +65,7 @@ def plot_reveal_probability_by_quality_bin(player_records, output_dir, bin_size=
 
 def plot_improvement_after_revealed_quality(player_records, output_dir, bin_size=10):
     """Plot improvement probability after observing a revealed opponent."""
-    rows = improvement_rate_by_revealed_opponent_quality(player_records, bin_size=bin_size)
+    rows = _improvement_rate_by_treatment_and_opponent_bin(player_records, bin_size)
     treatments = _unique(row["treatment_id"] for row in rows)
 
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -135,29 +134,41 @@ def plot_payoff_distribution(player_records, output_dir):
 
 
 def plot_theoretical_vs_empirical_cutoff(player_records, output_dir):
-    """Compare theoretical and empirical reveal cutoffs."""
-    rows = summarize_by_treatment_and_type(player_records)
-    rows = [row for row in rows if row["empirical_reveal_cutoff"] is not None]
+    """Compare model cutoff to simulated EquilibriumAgent cutoff by treatment."""
+    rows = _equilibrium_cutoff_rows(player_records)
+    rows = [row for row in rows if row["empirical_cutoff"] is not None]
 
-    labels = [row["treatment_id"] + "\n" + row["player_type"] for row in rows]
-    theoretical = [100 * row["theoretical_reveal_cutoff"] for row in rows]
-    empirical = [row["empirical_reveal_cutoff"] for row in rows]
+    labels = [row["treatment_id"] for row in rows]
+    theoretical = [row["theoretical_cutoff"] for row in rows]
+    empirical = [row["empirical_cutoff"] for row in rows]
     x_values = list(range(len(rows)))
     width = 0.38
 
-    fig, ax = plt.subplots(figsize=(max(10, len(rows) * 0.8), 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    if not rows:
+        ax.text(
+            0.5,
+            0.5,
+            "No empirical EquilibriumAgent cutoff available",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+        )
+        ax.set_axis_off()
+        return _save(fig, output_dir, "theoretical_vs_empirical_cutoff.png")
     left = [x - width / 2 for x in x_values]
     right = [x + width / 2 for x in x_values]
 
-    ax.bar(left, theoretical, width=width, color=PLOT_COLORS["gray"], label="Theoretical")
-    ax.bar(right, empirical, width=width, color=PLOT_COLORS["gold"], label="Empirical")
+    ax.bar(left, theoretical, width=width, color=PLOT_COLORS["gray"], label="Model cutoff r*")
+    ax.bar(right, empirical, width=width, color=PLOT_COLORS["gold"], label="Simulated EquilibriumAgent cutoff")
 
-    ax.set_title("Theoretical vs Empirical Reveal Cutoff")
-    ax.set_xlabel("Treatment and player type")
+    ax.set_title("Model vs Simulated Equilibrium Reveal Cutoff")
+    ax.set_xlabel("Treatment")
     ax.set_ylabel("Quality cutoff on 0-100 grid")
     ax.set_ylim(0, 105)
     ax.set_xticks(x_values)
-    ax.set_xticklabels(labels, rotation=45, ha="right")
+    ax.set_xticklabels(labels, rotation=20, ha="right")
     ax.grid(True, axis="y", alpha=0.25)
     ax.legend(frameon=False)
 
@@ -187,3 +198,110 @@ def _sort_by_bin_midpoint(rows, field_name):
 def _bin_midpoint(label):
     low_text, high_text = label.split("-")
     return (int(low_text) + int(high_text)) / 2
+
+
+def _reveal_rate_by_treatment_and_bin(player_records, bin_size):
+    prepared_records = []
+    for record in player_records:
+        copied = dict(record)
+        copied["quality_bin"] = quality_bin_label(record["initial_quality"], bin_size)
+        prepared_records.append(copied)
+
+    rows = []
+    for key, records in _group_records(prepared_records, ["treatment_id", "quality_bin"]).items():
+        treatment_id, quality_bin = key
+        rows.append(
+            {
+                "treatment_id": treatment_id,
+                "quality_bin": quality_bin,
+                "n_player_records": len(records),
+                "reveal_rate": _mean_bool(records, "reveal_decision"),
+            }
+        )
+
+    return sorted(rows, key=lambda row: (row["treatment_id"], _bin_midpoint(row["quality_bin"])))
+
+
+def _improvement_rate_by_treatment_and_opponent_bin(player_records, bin_size):
+    prepared_records = []
+    for record in player_records:
+        if record["reveal_decision"]:
+            continue
+        if not record["opponent_reveal_decision"]:
+            continue
+
+        copied = dict(record)
+        copied["opponent_quality_bin"] = quality_bin_label(
+            record["opponent_revealed_quality_if_observed"],
+            bin_size,
+        )
+        prepared_records.append(copied)
+
+    rows = []
+    groups = _group_records(prepared_records, ["treatment_id", "opponent_quality_bin"])
+    for key, records in groups.items():
+        treatment_id, opponent_quality_bin = key
+        rows.append(
+            {
+                "treatment_id": treatment_id,
+                "opponent_quality_bin": opponent_quality_bin,
+                "n_player_records": len(records),
+                "improvement_rate": _mean_bool(records, "improve_decision_if_applicable"),
+            }
+        )
+
+    return sorted(rows, key=lambda row: (row["treatment_id"], _bin_midpoint(row["opponent_quality_bin"])))
+
+
+def _equilibrium_cutoff_rows(player_records):
+    rows = []
+    for treatment_id, records in _group_records(player_records, ["treatment_id"]).items():
+        equilibrium_records = []
+        for record in records:
+            if record["player_type"] == "EquilibriumAgent":
+                equilibrium_records.append(record)
+
+        if not equilibrium_records:
+            continue
+
+        rows.append(
+            {
+                "treatment_id": treatment_id,
+                "theoretical_cutoff": 100 * theoretical_reveal_cutoff(equilibrium_records[0]["k"]),
+                "empirical_cutoff": estimate_empirical_reveal_cutoff(equilibrium_records),
+            }
+        )
+
+    return sorted(rows, key=lambda row: row["treatment_id"])
+
+
+def _group_records(records, field_names):
+    groups = {}
+
+    for record in records:
+        key_parts = []
+        for field_name in field_names:
+            key_parts.append(record[field_name])
+
+        if len(key_parts) == 1:
+            key = key_parts[0]
+        else:
+            key = tuple(key_parts)
+
+        if key not in groups:
+            groups[key] = []
+        groups[key].append(record)
+
+    return groups
+
+
+def _mean_bool(records, field_name):
+    if not records:
+        return None
+
+    count = 0
+    for record in records:
+        if record[field_name]:
+            count += 1
+
+    return count / len(records)

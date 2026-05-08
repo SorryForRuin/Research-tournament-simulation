@@ -86,6 +86,17 @@ def test_reveal_rate_by_quality_bin_and_empirical_cutoff():
     assert estimate_empirical_reveal_cutoff(records, bin_size=10) == 84.5
 
 
+def test_empirical_cutoff_sorts_bins_numerically_not_textually():
+    records = [
+        _record(100, True, None),
+        _record(80, True, None),
+        _record(20, False, False),
+    ]
+
+    # If bins were sorted as text, 100-100 would come before 80-89.
+    assert estimate_empirical_reveal_cutoff(records, bin_size=10) == 84.5
+
+
 def test_improvement_rate_after_revealed_opponent_quality():
     records = [
         _record(40, False, True, opponent_reveal=True, opponent_q=80),
@@ -129,6 +140,7 @@ if __name__ == "__main__":
     test_quality_bin_label()
     test_basic_summary_rates()
     test_reveal_rate_by_quality_bin_and_empirical_cutoff()
+    test_empirical_cutoff_sorts_bins_numerically_not_textually()
     test_improvement_rate_after_revealed_opponent_quality()
     test_deterrence_rate()
     test_summary_with_simulated_experiment()
