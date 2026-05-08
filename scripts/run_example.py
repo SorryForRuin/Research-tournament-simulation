@@ -1,6 +1,12 @@
 """Small example script for the current project stage."""
 
+from pathlib import Path
 import random
+import sys
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from tournament_sim.agents import AlwaysHideStopAgent, AlwaysRevealAgent
 from tournament_sim.probabilities import (
