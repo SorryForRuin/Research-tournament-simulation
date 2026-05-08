@@ -32,3 +32,21 @@ The project will be built in small steps so the model, assumptions, and implemen
 4. Add noisy and heuristic behavioral agents.
 5. Add experiment-level random matching.
 6. Generate summary tables and plots.
+
+## Current Status
+
+The first project skeleton is in place:
+
+- `tournament_sim/treatment.py` defines treatment parameters.
+- `tournament_sim/probabilities.py` defines exact discrete probability helpers.
+- `tournament_sim/agents.py` defines the basic agent interface.
+- `tournament_sim/round.py` defines a simple player state object.
+- `scripts/run_example.py` prints the default treatment cutoffs.
+- `tests/test_probabilities.py` checks the first probability helpers.
+
+Once Python is available, run the small checks with:
+
+```bash
+python tests/test_probabilities.py
+python scripts/run_example.py
+```
