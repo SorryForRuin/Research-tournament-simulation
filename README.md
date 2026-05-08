@@ -39,7 +39,7 @@ The first project skeleton is in place:
 
 - `tournament_sim/treatment.py` defines treatment parameters.
 - `tournament_sim/probabilities.py` defines exact discrete probability helpers.
-- `tournament_sim/agents.py` defines the basic agent interface.
+- `tournament_sim/agents.py` defines the basic agent interface and benchmark `EquilibriumAgent`.
 - `tournament_sim/round.py` simulates one complete two-player round.
 - `scripts/run_example.py` prints treatment cutoffs and one example round.
 - `tests/test_probabilities.py` checks the first probability helpers.
@@ -50,6 +50,7 @@ Once Python is available, run the small checks with:
 ```bash
 python tests/test_probabilities.py
 python tests/test_round.py
+python tests/test_equilibrium_agent.py
 python scripts/run_example.py
 ```
 

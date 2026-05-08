@@ -8,7 +8,11 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from tournament_sim.agents import AlwaysHideStopAgent, AlwaysRevealAgent
+from tournament_sim.agents import (
+    AlwaysHideStopAgent,
+    AlwaysRevealAgent,
+    EquilibriumAgent,
+)
 from tournament_sim.probabilities import (
     theoretical_hidden_cutoff,
     theoretical_reveal_cutoff,
@@ -51,6 +55,21 @@ def main():
         print(player_record)
 
     print("Match:", result.match_record)
+
+    print()
+    print("EquilibriumAgent decisions")
+    print("--------------------------")
+    agent = EquilibriumAgent()
+    treatment = default_treatments()[0]
+    for q in [28, 29, 85, 86]:
+        print(
+            "q=",
+            q,
+            "reveal=",
+            agent.decide_reveal(q, treatment),
+            "improve_if_both_hide=",
+            agent.decide_improve(q, treatment, False, None),
+        )
 
 
 if __name__ == "__main__":
