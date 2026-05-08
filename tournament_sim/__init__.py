@@ -7,6 +7,7 @@ from tournament_sim.agents import (
     OverRevealerAgent,
     UnderRevealerAgent,
 )
+from tournament_sim.analysis import run_all_tests
 from tournament_sim.experiment import simulate_experiment
 from tournament_sim.export import export_experiment_outputs
 from tournament_sim.summary import summarize_by_treatment_and_type
@@ -21,6 +22,7 @@ __all__ = [
     "MyopicHeuristicAgent",
     "NoisyEquilibriumAgent",
     "OverRevealerAgent",
+    "run_all_tests",
     "Treatment",
     "UnderRevealerAgent",
     "default_treatments",

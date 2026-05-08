@@ -69,6 +69,18 @@ Full outputs are written to:
 outputs/full_simulation/
 ```
 
+Run the regression/descriptive analysis on the full simulation:
+
+```bash
+python scripts/run_analysis.py
+```
+
+Analysis outputs are written to:
+
+```text
+outputs/analysis/
+```
+
 ## Full Output Files
 
 Raw data:
@@ -172,6 +184,7 @@ python tests/test_behavioral_agents.py
 python tests/test_summary.py
 python tests/test_plots.py
 python tests/test_export.py
+python tests/test_analysis.py
 ```
 
 What they check:
@@ -185,6 +198,7 @@ What they check:
 - summary statistics,
 - plot generation,
 - CSV export.
+- regression and descriptive analysis.
 
 ## Project Structure
 
@@ -197,12 +211,14 @@ tournament_sim/
   probabilities.py exact probability and cutoff helpers
   round.py         one two-player round
   summary.py       summary tables
+  analysis.py      regressions and descriptive tests
   treatment.py     treatment parameters
 
 scripts/
   run_example.py          small readable demo
   generate_small_plots.py small plot generation
   run_full_simulation.py  full simulation, CSVs, and plots
+  run_analysis.py         regression/descriptive analysis
 
 tests/
   test_*.py        dependency-light checks for each project layer
