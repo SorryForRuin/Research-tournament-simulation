@@ -2,12 +2,15 @@
 
 from tournament_sim.agents import (
     EquilibriumAgent,
+    HypeResponsiveEquilibriumAgent,
+    HypeResponsiveNoisyEquilibriumAgent,
     MyopicHeuristicAgent,
     NoisyEquilibriumAgent,
     OverRevealerAgent,
     UnderRevealerAgent,
 )
 from tournament_sim.analysis import run_all_tests
+from tournament_sim.counterfactuals import add_counterfactual_columns
 from tournament_sim.experiment import simulate_experiment
 from tournament_sim.export import export_experiment_outputs
 from tournament_sim.summary import summarize_by_treatment_and_type
@@ -17,6 +20,9 @@ from tournament_sim.round import simulate_round
 
 __all__ = [
     "EquilibriumAgent",
+    "HypeResponsiveEquilibriumAgent",
+    "HypeResponsiveNoisyEquilibriumAgent",
+    "add_counterfactual_columns",
     "export_experiment_outputs",
     "generate_all_plots",
     "MyopicHeuristicAgent",

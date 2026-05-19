@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 import statsmodels.formula.api as smf  # noqa: E402
 
+from tournament_sim.counterfactuals import add_counterfactual_columns
 from tournament_sim.probabilities import theoretical_reveal_cutoff
 
 
@@ -95,6 +96,10 @@ def test_quality_dependent_reveal(df):
             "revealed ~ q_norm + high_cost + hype_treatment + q_norm:high_cost + q_norm:hype_treatment",
             df,
         ),
+        "lpm_player_type_interactions": run_lpm(
+            "revealed ~ q_norm * C(player_type) + high_cost + hype_treatment",
+            df,
+        ),
         "logit_simple": run_logit("revealed ~ q_norm", df),
     }
 
@@ -103,6 +108,10 @@ def test_cost_effect(df):
     return {
         "lpm_high_cost": run_lpm("revealed ~ high_cost + q_norm + hype_treatment", df),
         "lpm_k": run_lpm("revealed ~ k + q_norm + hype_treatment", df),
+        "lpm_high_cost_player_type": run_lpm(
+            "revealed ~ high_cost * C(player_type) + q_norm + hype_treatment",
+            df,
+        ),
         "logit_high_cost": run_logit("revealed ~ high_cost + q_norm + hype_treatment", df),
     }
 
@@ -112,6 +121,10 @@ def test_hype_effect(df):
         "lpm_hype": run_lpm("revealed ~ hype_treatment + q_norm + k", df),
         "lpm_hype_interaction": run_lpm(
             "revealed ~ hype_treatment + q_norm + k + hype_treatment:q_norm",
+            df,
+        ),
+        "lpm_hype_player_type": run_lpm(
+            "revealed ~ hype_treatment * C(player_type) + q_norm + k",
             df,
         ),
         "logit_hype": run_logit("revealed ~ hype_treatment + q_norm + k", df),
@@ -125,6 +138,10 @@ def test_deterrence(df):
         "sample_n": len(sample),
         "lpm_deterrence": run_lpm(
             "improved ~ opponent_revealed_quality_norm + q_norm + k + hype_treatment",
+            sample,
+        ),
+        "lpm_deterrence_player_type": run_lpm(
+            "improved ~ opponent_revealed_quality_norm * C(player_type) + q_norm + k + hype_treatment",
             sample,
         ),
         "logit_deterrence": run_logit(
@@ -176,10 +193,60 @@ def test_payoff_effect(df):
     }
 
 
+def test_counterfactual_reveal_gain(df):
+    """Analyze ex-post counterfactual gain from reveal vs best hidden action."""
+    cf_df = add_counterfactual_columns(df)
+    return {
+        "overall": pd.DataFrame(
+            [
+                {
+                    "n": len(cf_df),
+                    "mean_cf_reveal_gain_vs_best_hide": cf_df["cf_reveal_gain_vs_best_hide"].mean(),
+                    "correlation_actual_reveal_cf_gain": cf_df["revealed"].corr(
+                        cf_df["cf_reveal_gain_vs_best_hide"]
+                    ),
+                    "prob_action_matches_cf_gain": cf_df["actual_reveal_matches_cf_gain"].mean(),
+                }
+            ]
+        ),
+        "by_treatment": cf_df.groupby("treatment_id", observed=True)
+        .agg(
+            n=("cf_reveal_gain_vs_best_hide", "size"),
+            mean_cf_reveal_gain_vs_best_hide=("cf_reveal_gain_vs_best_hide", "mean"),
+            prob_action_matches_cf_gain=("actual_reveal_matches_cf_gain", "mean"),
+        )
+        .reset_index(),
+        "by_quality_bin": cf_df.groupby("q_bin", observed=True)
+        .agg(
+            n=("cf_reveal_gain_vs_best_hide", "size"),
+            mean_cf_reveal_gain_vs_best_hide=("cf_reveal_gain_vs_best_hide", "mean"),
+        )
+        .reset_index(),
+        "by_player_type": cf_df.groupby("player_type", observed=True)
+        .agg(
+            n=("cf_reveal_gain_vs_best_hide", "size"),
+            mean_cf_reveal_gain_vs_best_hide=("cf_reveal_gain_vs_best_hide", "mean"),
+            prob_action_matches_cf_gain=("actual_reveal_matches_cf_gain", "mean"),
+        )
+        .reset_index(),
+    }
+
+
 def make_descriptive_tables(df):
     deterrence_sample = df[(df["eligible_to_improve"] == 1) & (df["opponent_revealed"] == 1)].copy()
     return {
         "treatment_summary": df.groupby("treatment_id", observed=True)
+        .agg(
+            n=("revealed", "size"),
+            reveal_rate=("revealed", "mean"),
+            improve_rate=("improved", "mean"),
+            win_rate=("won", "mean"),
+            average_payoff=("payoff", "mean"),
+            average_initial_quality=("initial_quality", "mean"),
+            average_final_quality=("final_quality", "mean"),
+        )
+        .reset_index(),
+        "treatment_by_player_type_summary": df.groupby(["treatment_id", "player_type"], observed=True)
         .agg(
             n=("revealed", "size"),
             reveal_rate=("revealed", "mean"),
@@ -242,6 +309,10 @@ def make_plots(df, output_dir):
             df,
             output_dir / "payoff_by_quality_bin_and_reveal.png",
         ),
+        _plot_cf_reveal_gain_by_quality_bin(
+            add_counterfactual_columns(df),
+            output_dir / "cf_reveal_gain_by_quality_bin.png",
+        ),
     ]
     return paths
 
@@ -265,6 +336,7 @@ def run_all_tests(df, output_dir):
         "equilibrium_compliance": test_equilibrium_compliance(df),
         "under_over_reveal": test_under_over_reveal(df),
         "payoff_effect": test_payoff_effect(df),
+        "counterfactual_reveal_gain": test_counterfactual_reveal_gain(df),
     }
     results["descriptive_tables"] = make_descriptive_tables(df)
     results["plots"] = make_plots(df, plot_dir)
@@ -347,14 +419,27 @@ def _empirical_cutoffs_by_treatment(df):
             if logit_beta is not None and logit_beta != 0:
                 logit_q50 = -logit_alpha / logit_beta
 
+        preferred_method = None
+        preferred_q50 = None
+        if logit_q50 is not None and 0 <= logit_q50 <= 1:
+            preferred_method = "logit"
+            preferred_q50 = logit_q50
+        elif lpm_q50 is not None and 0 <= lpm_q50 <= 1:
+            preferred_method = "lpm"
+            preferred_q50 = lpm_q50
+
         rows.append(
             {
                 "treatment_id": treatment_id,
                 "r_star_mean": group["r_star"].mean(),
                 "empirical_q50_lpm": lpm_q50,
+                "lpm_q50_out_of_bounds": not (lpm_q50 is not None and 0 <= lpm_q50 <= 1),
                 "difference_lpm_minus_theory": None if lpm_q50 is None else lpm_q50 - group["r_star"].mean(),
                 "empirical_q50_logit": logit_q50,
+                "logit_q50_out_of_bounds": not (logit_q50 is not None and 0 <= logit_q50 <= 1),
                 "difference_logit_minus_theory": None if logit_q50 is None else logit_q50 - group["r_star"].mean(),
+                "preferred_empirical_q50": preferred_q50,
+                "preferred_method": preferred_method,
             }
         )
     return pd.DataFrame(rows)
@@ -423,6 +508,19 @@ def _plot_payoff_by_quality_bin_and_reveal(df, path):
         average_payoff=("payoff", "mean")
     ).reset_index()
     return _multi_line_plot(plot_df, "q_bin", "average_payoff", "revealed_label", path, "Average Payoff by Quality Bin and Reveal Action")
+
+
+def _plot_cf_reveal_gain_by_quality_bin(df, path):
+    plot_df = df.groupby("q_bin", observed=True).agg(
+        mean_cf_reveal_gain=("cf_reveal_gain_vs_best_hide", "mean")
+    ).reset_index()
+    return _line_plot(
+        plot_df,
+        "q_bin",
+        "mean_cf_reveal_gain",
+        path,
+        "Counterfactual Reveal Gain by Quality Bin",
+    )
 
 
 def _line_plot(plot_df, x_col, y_col, path, title):

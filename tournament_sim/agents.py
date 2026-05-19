@@ -3,6 +3,7 @@
 import math
 
 from tournament_sim.probabilities import (
+    approximate_hype_reveal_cutoff,
     expected_improve_payoff,
     expected_stop_payoff,
     quality_to_norm,
@@ -165,6 +166,24 @@ class MyopicHeuristicAgent(Agent):
             )
 
         return q >= self.both_hidden_improve_threshold
+
+
+class HypeResponsiveEquilibriumAgent(EquilibriumAgent):
+    """Equilibrium-style agent that lowers its reveal cutoff under hype."""
+
+    agent_type = "HypeResponsiveEquilibriumAgent"
+
+    def reveal_cutoff(self, treatment):
+        return _clamp(approximate_hype_reveal_cutoff(treatment))
+
+
+class HypeResponsiveNoisyEquilibriumAgent(NoisyEquilibriumAgent):
+    """Noisy equilibrium agent using the hype-responsive reveal cutoff."""
+
+    agent_type = "HypeResponsiveNoisyEquilibriumAgent"
+
+    def reveal_cutoff(self, treatment):
+        return _clamp(approximate_hype_reveal_cutoff(treatment))
 
 
 class AlwaysRevealAgent(Agent):

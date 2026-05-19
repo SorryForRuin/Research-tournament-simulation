@@ -16,6 +16,23 @@ def theoretical_hidden_cutoff(k):
     return ((1 - k) * (1 - 3 * k)) / (1 + 3 * k**2)
 
 
+def approximate_hype_reveal_cutoff(treatment):
+    """
+    Approximate reveal cutoff for a hype-responsive model extension.
+
+    This keeps the original no-hype benchmark intact. The approximation equals
+    the no-hype cutoff when h == 0 and lowers the cutoff when a revealed winner
+    can receive hype.
+    """
+    no_hype_cutoff = theoretical_reveal_cutoff(treatment.k)
+    if treatment.h <= 0:
+        return no_hype_cutoff
+
+    hype_strength = treatment.h / (treatment.V + treatment.h)
+    shifted_cutoff = no_hype_cutoff - hype_strength * (1 - no_hype_cutoff)
+    return max(0.0, min(1.0, shifted_cutoff))
+
+
 def stop_win_probability(q, opponent_q):
     """Win probability if the player stops against a fixed revealed quality."""
     if q > opponent_q:

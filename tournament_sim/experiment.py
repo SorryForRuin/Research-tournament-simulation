@@ -8,6 +8,8 @@ from tournament_sim.agents import (
     AlwaysHideStopAgent,
     AlwaysRevealAgent,
     EquilibriumAgent,
+    HypeResponsiveEquilibriumAgent,
+    HypeResponsiveNoisyEquilibriumAgent,
     MyopicHeuristicAgent,
     NoisyEquilibriumAgent,
     OverRevealerAgent,
@@ -19,6 +21,8 @@ from tournament_sim.treatment import default_treatments
 
 AGENT_TYPES = {
     "EquilibriumAgent": EquilibriumAgent,
+    "HypeResponsiveEquilibriumAgent": HypeResponsiveEquilibriumAgent,
+    "HypeResponsiveNoisyEquilibriumAgent": HypeResponsiveNoisyEquilibriumAgent,
     "NoisyEquilibriumAgent": NoisyEquilibriumAgent,
     "UnderRevealerAgent": UnderRevealerAgent,
     "OverRevealerAgent": OverRevealerAgent,

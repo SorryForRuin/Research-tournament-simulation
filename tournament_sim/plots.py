@@ -13,6 +13,7 @@ from tournament_sim.summary import (
     cutoff_comparison_summary,
     estimate_empirical_reveal_cutoff,
     quality_bin_label,
+    proportion_se_ci,
 )
 
 
@@ -52,7 +53,8 @@ def plot_reveal_probability_by_quality_bin(player_records, output_dir, bin_size=
         treatment_rows = _sort_by_bin_midpoint(treatment_rows, "quality_bin")
         x_values = [_bin_midpoint(row["quality_bin"]) for row in treatment_rows]
         y_values = [row["reveal_rate"] for row in treatment_rows]
-        ax.plot(x_values, y_values, marker="o", linewidth=2, label=treatment)
+        y_errors = _y_errors(treatment_rows, "reveal_rate", "reveal_ci_low", "reveal_ci_high")
+        ax.errorbar(x_values, y_values, yerr=y_errors, marker="o", linewidth=2, capsize=3, label=treatment)
 
     ax.set_title("Reveal Probability by Initial Quality")
     ax.set_xlabel("Initial quality bin midpoint")
@@ -78,7 +80,13 @@ def plot_improvement_after_revealed_quality(player_records, output_dir, bin_size
             treatment_rows = _sort_by_bin_midpoint(treatment_rows, "opponent_quality_bin")
             x_values = [_bin_midpoint(row["opponent_quality_bin"]) for row in treatment_rows]
             y_values = [row["improvement_rate"] for row in treatment_rows]
-            ax.plot(x_values, y_values, marker="o", linewidth=2, label=treatment)
+            y_errors = _y_errors(
+                treatment_rows,
+                "improvement_rate",
+                "improvement_ci_low",
+                "improvement_ci_high",
+            )
+            ax.errorbar(x_values, y_values, yerr=y_errors, marker="o", linewidth=2, capsize=3, label=treatment)
     else:
         ax.text(
             0.5,
@@ -241,6 +249,7 @@ def _reveal_rate_by_treatment_and_bin(player_records, bin_size):
                 "quality_bin": quality_bin,
                 "n_player_records": len(records),
                 "reveal_rate": _mean_bool(records, "reveal_decision"),
+                **proportion_se_ci(_mean_bool(records, "reveal_decision"), len(records), "reveal"),
             }
         )
 
@@ -272,6 +281,11 @@ def _improvement_rate_by_treatment_and_opponent_bin(player_records, bin_size):
                 "opponent_quality_bin": opponent_quality_bin,
                 "n_player_records": len(records),
                 "improvement_rate": _mean_bool(records, "improve_decision_if_applicable"),
+                **proportion_se_ci(
+                    _mean_bool(records, "improve_decision_if_applicable"),
+                    len(records),
+                    "improvement",
+                ),
             }
         )
 
@@ -330,3 +344,10 @@ def _mean_bool(records, field_name):
             count += 1
 
     return count / len(records)
+
+
+def _y_errors(rows, value_field, low_field, high_field):
+    return [
+        [row[value_field] - row[low_field] for row in rows],
+        [row[high_field] - row[value_field] for row in rows],
+    ]

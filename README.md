@@ -62,6 +62,9 @@ python tests/test_summary.py
 python tests/test_plots.py
 python tests/test_export.py
 python tests/test_analysis.py
+python tests/test_counterfactuals.py
+python tests/test_hype_responsive_agents.py
+python tests/test_robustness.py
 ```
 
 Each test file prints a short success message if it passes.
@@ -121,7 +124,36 @@ outputs/analysis/
 ```
 
 This runs the requested regressions, deterrence test, equilibrium-compliance
-checks, descriptive tables, and analysis plots.
+checks, counterfactual payoff diagnostics, descriptive tables, and analysis
+plots.
+
+### Run Robustness Checks
+
+These scripts are useful once the core simulation is working.
+
+Run the no-hype benchmark population:
+
+```bash
+python scripts/run_benchmark_simulation.py
+```
+
+Run the hype-responsive model extension:
+
+```bash
+python scripts/run_hype_responsive_simulation.py
+```
+
+Run the same design across several random seeds:
+
+```bash
+python scripts/run_seed_robustness.py
+```
+
+Run several alternative population mixes:
+
+```bash
+python scripts/run_population_robustness.py
+```
 
 ## 3. Output Folders
 
@@ -176,6 +208,34 @@ Statistical-test plots:
 outputs/analysis/plots/
 ```
 
+### Robustness Outputs
+
+Benchmark equilibrium simulation:
+
+```text
+outputs/robustness/benchmark_equilibrium/
+```
+
+Seed robustness:
+
+```text
+outputs/robustness/seed_robustness/seed_level_treatment_summary.csv
+outputs/robustness/seed_robustness/seed_level_key_coefficients.csv
+```
+
+Population-composition robustness:
+
+```text
+outputs/robustness/population_robustness/population_treatment_summary.csv
+outputs/robustness/population_robustness/population_key_coefficients.csv
+```
+
+Hype-responsive extension:
+
+```text
+outputs/hype_responsive_simulation/
+```
+
 ## 4. File Map
 
 ### Core Simulation Package
@@ -200,6 +260,7 @@ Defines exact discrete probability helpers and theoretical cutoffs:
 - `r_star`,
 - `s_star`,
 - exact win probability after improvement.
+- approximate hype-responsive reveal cutoff for the extension agents.
 
 ```text
 tournament_sim/agents.py
@@ -209,9 +270,19 @@ Defines behavioral agent types:
 
 - `EquilibriumAgent`
 - `NoisyEquilibriumAgent`
+- `HypeResponsiveEquilibriumAgent`
+- `HypeResponsiveNoisyEquilibriumAgent`
 - `UnderRevealerAgent`
 - `OverRevealerAgent`
 - `MyopicHeuristicAgent`
+
+Important distinction:
+
+- `EquilibriumAgent` uses the original no-hype theoretical cutoffs even in
+  hype treatments. This keeps the baseline benchmark fixed.
+- `HypeResponsiveEquilibriumAgent` is a model extension that lowers the reveal
+  cutoff when `h > 0`, so it is the version to use when testing
+  hype-induced disclosure.
 
 ```text
 tournament_sim/round.py
@@ -246,6 +317,7 @@ Computes summary tables:
 
 - reveal rates,
 - improvement rates,
+- bin-level standard errors and 95% confidence intervals,
 - payoff averages,
 - quality-bin summaries,
 - deterrence summaries,
@@ -264,6 +336,25 @@ tournament_sim/export.py
 Exports raw records and summary tables to CSV.
 
 ```text
+tournament_sim/counterfactuals.py
+```
+
+Adds simulation diagnostics for counterfactual payoff comparisons:
+
+- payoff if reveal,
+- payoff if hide and stop,
+- payoff if hide and improve,
+- best hidden payoff,
+- reveal gain relative to best hidden action.
+
+```text
+tournament_sim/robustness.py
+```
+
+Shared helpers used by robustness scripts for seed checks and population
+composition checks.
+
+```text
 tournament_sim/analysis.py
 ```
 
@@ -275,6 +366,7 @@ Runs the statistical analysis:
 - equilibrium-compliance test,
 - under/over-reveal test,
 - payoff regressions,
+- counterfactual reveal-gain diagnostics,
 - descriptive tables,
 - analysis plots.
 
@@ -316,6 +408,31 @@ scripts/run_analysis.py
 
 Runs all statistical tests on the full simulation output.
 
+```text
+scripts/run_benchmark_simulation.py
+```
+
+Runs a 100% `EquilibriumAgent` benchmark simulation.
+
+```text
+scripts/run_hype_responsive_simulation.py
+```
+
+Runs a full simulation using the hype-responsive agent extension.
+
+```text
+scripts/run_seed_robustness.py
+```
+
+Runs the main simulation design across multiple random seeds and exports
+seed-level treatment summaries and key coefficients.
+
+```text
+scripts/run_population_robustness.py
+```
+
+Runs several population compositions and exports comparison summaries.
+
 ## 6. Statistical Tests Implemented
 
 The analysis pipeline implements:
@@ -327,6 +444,7 @@ The analysis pipeline implements:
 5. Equilibrium-compliance and empirical cutoff checks.
 6. Under-reveal versus over-reveal relative to the benchmark cutoff.
 7. Payoff effect of revealing while controlling for quality and treatment.
+8. Counterfactual reveal gain relative to the best hidden action.
 
 Important deterrence restriction:
 
@@ -337,6 +455,10 @@ opponent_revealed == 1
 
 So the deterrence regression only uses hidden players who actually observed an
 opponent reveal.
+
+Empirical cutoff reporting includes both LPM and logit `q50` estimates. The
+analysis also reports a preferred in-bounds estimate when one exists and flags
+out-of-bounds estimates instead of silently treating them as meaningful cutoffs.
 
 ## 7. Model Details
 
@@ -390,4 +512,6 @@ To reproduce outputs, run:
 ```bash
 python scripts/run_full_simulation.py
 python scripts/run_analysis.py
+python scripts/run_seed_robustness.py
+python scripts/run_population_robustness.py
 ```

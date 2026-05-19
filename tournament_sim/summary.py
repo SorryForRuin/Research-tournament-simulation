@@ -1,5 +1,7 @@
 """Summary statistics for simulated tournament data."""
 
+import math
+
 from tournament_sim.probabilities import theoretical_reveal_cutoff
 
 
@@ -47,6 +49,7 @@ def reveal_rate_by_quality_bin(player_records, bin_size=10):
                 "quality_bin": quality_bin,
                 "n_player_records": len(records),
                 "reveal_rate": _mean_bool(records, "reveal_decision"),
+                **proportion_se_ci(_mean_bool(records, "reveal_decision"), len(records), "reveal"),
             }
         )
 
@@ -89,6 +92,11 @@ def improvement_rate_by_revealed_opponent_quality(player_records, bin_size=10):
                 "opponent_quality_bin": opponent_quality_bin,
                 "n_player_records": len(records),
                 "improvement_rate": _mean_applicable(records, "improve_decision_if_applicable"),
+                **proportion_se_ci(
+                    _mean_applicable(records, "improve_decision_if_applicable"),
+                    len(records),
+                    "improvement",
+                ),
             }
         )
 
@@ -219,6 +227,25 @@ def quality_bin_midpoint(label):
     low = int(low_text)
     high = int(high_text)
     return (low + high) / 2
+
+
+def proportion_se_ci(proportion, n, prefix):
+    """Return standard error and 95% normal CI for a proportion."""
+    if proportion is None or n == 0:
+        return {
+            prefix + "_se": None,
+            prefix + "_ci_low": None,
+            prefix + "_ci_high": None,
+        }
+
+    se = math.sqrt(proportion * (1 - proportion) / n)
+    ci_low = max(0.0, proportion - 1.96 * se)
+    ci_high = min(1.0, proportion + 1.96 * se)
+    return {
+        prefix + "_se": se,
+        prefix + "_ci_low": ci_low,
+        prefix + "_ci_high": ci_high,
+    }
 
 
 def _group_records(records, field_names):
