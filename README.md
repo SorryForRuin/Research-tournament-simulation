@@ -127,6 +127,23 @@ This runs the requested regressions, deterrence test, equilibrium-compliance
 checks, counterfactual payoff diagnostics, descriptive tables, and analysis
 plots.
 
+### Compile Paper Results
+
+Run this after the full simulation and optional robustness scripts:
+
+```bash
+python scripts/compile_results_for_paper.py
+```
+
+Outputs:
+
+```text
+outputs/results_for_paper/
+```
+
+This creates compact CSV, Markdown, and LaTeX tables for writing the Results
+section.
+
 ### Run Robustness Checks
 
 These scripts are useful once the core simulation is working.
@@ -234,6 +251,21 @@ Hype-responsive extension:
 
 ```text
 outputs/hype_responsive_simulation/
+```
+
+### Paper Results Outputs
+
+Paper-ready tables and figure data:
+
+```text
+outputs/results_for_paper/paper_results_summary.md
+outputs/results_for_paper/main_descriptive_table.csv
+outputs/results_for_paper/main_regression_table.csv
+outputs/results_for_paper/deterrence_results_table.csv
+outputs/results_for_paper/equilibrium_compliance_table.csv
+outputs/results_for_paper/agent_type_results_table.csv
+outputs/results_for_paper/counterfactual_results_table.csv
+outputs/results_for_paper/figure_data/
 ```
 
 ## 4. File Map
@@ -355,6 +387,14 @@ Shared helpers used by robustness scripts for seed checks and population
 composition checks.
 
 ```text
+tournament_sim/results.py
+```
+
+Compiles compact paper-ready Results-section tables, figure-data CSVs, and a
+human-readable Markdown summary from the full simulation and optional
+robustness outputs.
+
+```text
 tournament_sim/analysis.py
 ```
 
@@ -432,6 +472,15 @@ scripts/run_population_robustness.py
 ```
 
 Runs several population compositions and exports comparison summaries.
+
+```text
+scripts/compile_results_for_paper.py
+```
+
+Creates `outputs/results_for_paper/`, including the Results-section summary,
+main descriptive table, main regression table, deterrence table, equilibrium
+compliance table, agent-type table, counterfactual diagnostics, hype-responsive
+comparison, robustness summary, and cleaned figure-data CSVs.
 
 ## 6. Statistical Tests Implemented
 
@@ -514,4 +563,5 @@ python scripts/run_full_simulation.py
 python scripts/run_analysis.py
 python scripts/run_seed_robustness.py
 python scripts/run_population_robustness.py
+python scripts/compile_results_for_paper.py
 ```
